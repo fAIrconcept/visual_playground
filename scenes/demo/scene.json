@@ -1,35 +1,43 @@
 {
-  "vertex": "../../shaders/fullscreen.vert",
+    "vertex": "../../shaders/fullscreen.vert",
 
-  "layers": [
-    {
-      "shader": "sky.frag",
-      "rect": [0.0, 0.0, 1.0, 1.0],
-      "blend": "replace"
-    },
-
-    {
-      "shader": "clouds.frag",
-      "rect": [0.0, 0.0, 1.0, 1.0],
-      "blend": "alpha"
-    },
-
-    {
-      "shader": "city-far.frag",
-      "rect": [0.0, 0.67, 1.0, 0.18],
-      "blend": "alpha"
-    },
-
-    {
-      "shader": "city-mid.frag",
-      "rect": [0.0, 0.72, 1.0, 0.18],
-      "blend": "alpha"
-    },
-
-    {
-      "shader": "city-near.frag",
-      "rect": [0.0, 0.77, 1.0, 0.23],
-      "blend": "alpha"
-    }
-  ]
+    "layers": [
+        {
+            "shader": "sky.frag",
+            "rect": [0.0, 0.0, 1.0, 1.0],
+            "blend": "replace"
+        },
+        {
+            "shader": "clouds.frag",
+            "rect": [0.0, 0.0, 1.0, 1.0],
+            "blend": "alpha"
+        },
+        {
+            "shader": "city.frag",
+            "texture": "skyline-far.png",
+            "rect": [0.0, 0.75, 1.0, 0.25],
+            "blend": "alpha",
+            "parallax": 0.025,
+            "color": [0.22, 0.045, 0.11],
+            "opacity": 1.0
+        },
+        {
+            "shader": "city.frag",
+            "texture": "skyline-mid.png",
+            "rect": [0.0, 0.79, 1.0, 0.21],
+            "blend": "alpha",
+            "parallax": 0.055,
+            "color": [0.065, 0.012, 0.055],
+            "opacity": 1.0
+        },
+        {
+            "shader": "city.frag",
+            "texture": "skyline-near.png",
+            "rect": [0.0, 0.66, 1.0, 0.34],
+            "blend": "alpha",
+            "parallax": 0.10,
+            "color": [0.006, 0.003, 0.012],
+            "opacity": 1.0
+        }
+    ]
 }
