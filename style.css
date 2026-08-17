@@ -1,0 +1,41 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #09000d;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+}
+
+#gl {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#hud {
+  position: fixed;
+  left: 12px;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #fff;
+  font-size: 13px;
+  opacity: 0.8;
+  user-select: none;
+}
+
+button {
+  border: 1px solid #ffffff44;
+  border-radius: 8px;
+  background: #0008;
+  color: white;
+  padding: 8px 11px;
+}
