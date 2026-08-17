@@ -1,7 +1,7 @@
 # Isometric City WebGL Playground
 
 Small no-build WebGL2 project intended for GitHub Pages and mobile browsers.
-
+https://fairconcept.github.io/visual_playground/
 ## Files
 
 - `index.html` — page shell
