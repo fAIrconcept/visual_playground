@@ -1,48 +1,39 @@
-# Isometric City WebGL Playground
+# GLSL Layer Compositor
 
-Small no-build WebGL2 project intended for GitHub Pages and mobile browsers.
-https://fairconcept.github.io/visual_playground/
-## Files
+Tiny WebGL2 layer compositor for GitHub Pages / Android.
 
-- `index.html` — page shell
-- `style.css` — fullscreen/mobile layout
-- `js/main.js` — app loop
-- `js/city.js` — procedural city state
-- `js/renderer.js` — WebGL2 renderer
-- `js/shaders.js` — GLSL shaders
-- `js/input.js` — touch/pointer drag
-- `js/util.js` — seeded random helpers
+Design:
+- Direct bounded rendering is the default.
+- `rect` is enforced with viewport + scissor, so fragments outside the rectangle are not rasterized.
+- FBO/texture work is opt-in via `resolution`, `target:"texture"`, or `input`.
+- GLSL `#include` is supported.
+- No npm, bundler, framework, or build step.
 
-## Run locally
-
-Because ES modules are used, serve the directory over HTTP rather than opening
-`index.html` directly.
-
-For example:
-
-```bash
-python3 -m http.server 8080
+Scene example:
+```json
+{"shader":"city-near.frag","rect":[0,0.70,1,0.30],"blend":"alpha"}
 ```
 
-Then open `http://localhost:8080`.
+Half-resolution opt-in:
+```json
+{"shader":"clouds.frag","rect":[0,0,1,0.8],"resolution":0.5,"blend":"alpha"}
+```
 
-## GitHub Pages
+Dependent input opt-in:
+```json
+{"shader":"effect.frag","input":"previous","target":"texture"}
+```
+Then use `uniform sampler2D u_input;` in that shader.
 
-Push the contents to a repository, then configure GitHub Pages to publish the
-repository root (or move these files into `/docs` and publish that folder).
+Standard optional uniforms:
+```glsl
+uniform vec2 u_resolution;
+uniform vec2 u_screenResolution;
+uniform vec4 u_rect;
+uniform float u_time;
+uniform float u_yaw;
+uniform vec2 u_pointer;
+uniform sampler2D u_input;
+```
 
-No build step and no dependencies are required.
-
-## Controls
-
-- Drag horizontally: move through the city.
-- `regen`: generate a new skyline.
-- Automatic horizontal drift is enabled.
-
-## Next experiments
-
-Good places to hack:
-
-- `js/city.js`: building generation, tier spacing, parallax.
-- `js/renderer.js`: isometric geometry and colors.
-- `js/shaders.js`: fog, glow, noise, scanlines, atmosphere.
+Run locally with any HTTP server, e.g. `python3 -m http.server 8080`, or publish repository root with GitHub Pages.
