@@ -10,7 +10,7 @@
 
     {
       "shader": "clouds.frag",
-      "rect": [0.0, 0.0, 1.0, 0.82],
+      "rect": [0.0, 0.0, 1.0, 1.0],
       "blend": "alpha"
     },
 

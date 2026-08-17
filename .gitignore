@@ -1,2 +1,4 @@
 # VS Code local workspace
 *.code-workspace
+.vs-code
+.clang-format
