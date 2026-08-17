@@ -1,11 +1,306 @@
-import{loadText,createProgram,createTarget,destroyTarget}from'./gl.js';import{loadShader}from'./includes.js';
-export class LayerCompositor{
- constructor(canvas){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance'});if(!this.gl)throw Error('WebGL2 required');this.layers=[];this.vao=this.gl.createVertexArray();this.gl.bindVertexArray(this.vao);this.makeBlit()}
- makeBlit(){const vs=`#version 300 es\nprecision highp float;out vec2 v_uv;void main(){vec2 p=gl_VertexID==0?vec2(-1,-1):gl_VertexID==1?vec2(3,-1):vec2(-1,3);v_uv=p*.5+.5;gl_Position=vec4(p,0,1);}`;const fs=`#version 300 es\nprecision highp float;in vec2 v_uv;uniform sampler2D u_tex;out vec4 o;void main(){o=texture(u_tex,v_uv);}`;this.blit=createProgram(this.gl,vs,fs,'blit');this.blitTex=this.gl.getUniformLocation(this.blit,'u_tex')}
- async loadScene(url){const sceneURL=new URL(url,location.href).href,scene=JSON.parse(await loadText(sceneURL)),vs=await loadShader(new URL(scene.vertex??'../../shaders/fullscreen.vert',sceneURL));for(const l of this.layers){this.gl.deleteProgram(l.program);destroyTarget(this.gl,l.target)}this.layers=[];for(const spec of scene.layers){const fragURL=new URL(spec.shader,sceneURL).href,program=createProgram(this.gl,vs,await loadShader(fragURL),fragURL);const U=n=>this.gl.getUniformLocation(program,n);this.layers.push({spec,program,target:null,u:{res:U('u_resolution'),screen:U('u_screenResolution'),rect:U('u_rect'),time:U('u_time'),yaw:U('u_yaw'),pointer:U('u_pointer'),input:U('u_input')}})}this.resize(this.canvas.width||1,this.canvas.height||1)}
- resize(w,h){this.w=w;this.h=h;for(const l of this.layers){destroyTarget(this.gl,l.target);l.target=null;const s=l.spec.resolution??1;if(s!==1||l.spec.target==='texture'||l.spec.input){const r=l.spec.rect??[0,0,1,1];l.target=createTarget(this.gl,Math.max(1,Math.floor(w*r[2]*s)),Math.max(1,Math.floor(h*r[3]*s)))}}}
- rect(r=[0,0,1,1]){const x=Math.floor(r[0]*this.w),top=Math.floor(r[1]*this.h),w=Math.max(1,Math.floor(r[2]*this.w)),h=Math.max(1,Math.floor(r[3]*this.h));return[x,this.h-top-h,w,h]}
- blend(mode='alpha'){const g=this.gl;if(mode==='replace'){g.disable(g.BLEND);return}g.enable(g.BLEND);mode==='add'?g.blendFunc(g.ONE,g.ONE):mode==='premultiplied'?g.blendFunc(g.ONE,g.ONE_MINUS_SRC_ALPHA):g.blendFunc(g.SRC_ALPHA,g.ONE_MINUS_SRC_ALPHA)}
- render(state={}){const g=this.gl;g.bindFramebuffer(g.FRAMEBUFFER,null);g.viewport(0,0,this.w,this.h);g.disable(g.SCISSOR_TEST);g.disable(g.BLEND);g.clearColor(0,0,0,1);g.clear(g.COLOR_BUFFER_BIT);g.bindVertexArray(this.vao);let previous=null;for(const l of this.layers){const r=l.spec.rect??[0,0,1,1],[x,y,w,h]=this.rect(r),direct=!l.target;if(direct){g.bindFramebuffer(g.FRAMEBUFFER,null);g.viewport(x,y,w,h);g.enable(g.SCISSOR_TEST);g.scissor(x,y,w,h);this.blend(l.spec.blend??'alpha')}else{g.bindFramebuffer(g.FRAMEBUFFER,l.target.framebuffer);g.viewport(0,0,l.target.width,l.target.height);g.enable(g.SCISSOR_TEST);g.scissor(0,0,l.target.width,l.target.height);g.disable(g.BLEND);g.clearColor(0,0,0,0);g.clear(g.COLOR_BUFFER_BIT)}g.useProgram(l.program);const rw=direct?w:l.target.width,rh=direct?h:l.target.height,u=l.u;if(u.res)g.uniform2f(u.res,rw,rh);if(u.screen)g.uniform2f(u.screen,this.w,this.h);if(u.rect)g.uniform4f(u.rect,...r);if(u.time)g.uniform1f(u.time,state.time??0);if(u.yaw)g.uniform1f(u.yaw,state.yaw??0);if(u.pointer)g.uniform2f(u.pointer,...(state.pointer??[0,0]));if(u.input&&l.spec.input==='previous'&&previous){g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,previous);g.uniform1i(u.input,0)}g.drawArrays(g.TRIANGLES,0,3);if(l.target){previous=l.target.texture;this.blitTarget(l,r,l.spec.blend??'alpha')}else previous=null}g.disable(g.SCISSOR_TEST)}
- blitTarget(l,r,blend){const g=this.gl,[x,y,w,h]=this.rect(r);g.bindFramebuffer(g.FRAMEBUFFER,null);g.viewport(x,y,w,h);g.enable(g.SCISSOR_TEST);g.scissor(x,y,w,h);this.blend(blend);g.useProgram(this.blit);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,l.target.texture);g.uniform1i(this.blitTex,0);g.drawArrays(g.TRIANGLES,0,3)}
+import { loadText, createProgram } from './gl.js';
+import { loadShaderWithIncludes } from './includes.js';
+
+export class LayerCompositor {
+    constructor(canvas) {
+        this.canvas = canvas;
+
+        this.gl = canvas.getContext('webgl2', {
+            alpha: false,
+            antialias: false,
+            depth: false,
+            stencil: false,
+            premultipliedAlpha: false,
+            powerPreference: 'high-performance'
+        });
+
+        if (!this.gl) {
+            throw new Error('WebGL2 is required');
+        }
+
+        this.layers = [];
+        this.width = 1;
+        this.height = 1;
+
+        const gl = this.gl;
+
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.CULL_FACE);
+    }
+
+    async loadScene(url) {
+        const sceneURL = new URL(url, location.href).href;
+
+        const scene = JSON.parse(
+            await loadText(sceneURL)
+        );
+
+        const vertexURL = new URL(
+            scene.vertex ?? '../../shaders/fullscreen.vert',
+            sceneURL
+        ).href;
+
+        const vertexSource =
+            await loadShaderWithIncludes(vertexURL);
+
+        const layers = [];
+
+        for (const spec of scene.layers) {
+            const fragURL = new URL(
+                spec.shader,
+                sceneURL
+            ).href;
+
+            const fragSource =
+                await loadShaderWithIncludes(fragURL);
+
+            const program = createProgram(
+                this.gl,
+                vertexSource,
+                fragSource,
+                fragURL
+            );
+
+            layers.push({
+                spec,
+                program,
+                uniforms: {
+                    resolution:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_resolution'
+                        ),
+
+                    screenResolution:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_screenResolution'
+                        ),
+
+                    rect:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_rect'
+                        ),
+
+                    time:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_time'
+                        ),
+
+                    yaw:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_yaw'
+                        ),
+
+                    pointer:
+                        this.gl.getUniformLocation(
+                            program,
+                            'u_pointer'
+                        )
+                }
+            });
+        }
+
+        for (const layer of this.layers) {
+            this.gl.deleteProgram(layer.program);
+        }
+
+        this.layers = layers;
+    }
+
+    resize(width, height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    rectPixels(rect) {
+        const [x, y, w, h] =
+            rect ?? [0, 0, 1, 1];
+
+        const px = Math.floor(
+            x * this.width
+        );
+
+        const pyTop = Math.floor(
+            y * this.height
+        );
+
+        const pw = Math.max(
+            1,
+            Math.floor(w * this.width)
+        );
+
+        const ph = Math.max(
+            1,
+            Math.floor(h * this.height)
+        );
+
+        const py =
+            this.height - pyTop - ph;
+
+        return [px, py, pw, ph];
+    }
+
+    applyBlend(mode = 'alpha') {
+        const gl = this.gl;
+
+        if (mode === 'replace') {
+            gl.disable(gl.BLEND);
+            return;
+        }
+
+        gl.enable(gl.BLEND);
+
+        if (mode === 'add') {
+            gl.blendFunc(
+                gl.ONE,
+                gl.ONE
+            );
+        } else {
+            gl.blendFunc(
+                gl.SRC_ALPHA,
+                gl.ONE_MINUS_SRC_ALPHA
+            );
+        }
+    }
+
+    render(state) {
+        const gl = this.gl;
+
+        gl.bindFramebuffer(
+            gl.FRAMEBUFFER,
+            null
+        );
+
+        gl.viewport(
+            0,
+            0,
+            this.width,
+            this.height
+        );
+
+        gl.disable(
+            gl.SCISSOR_TEST
+        );
+
+        gl.disable(
+            gl.BLEND
+        );
+
+        gl.clearColor(
+            0,
+            0,
+            0,
+            1
+        );
+
+        gl.clear(
+            gl.COLOR_BUFFER_BIT
+        );
+
+        gl.bindVertexArray(
+            this.vao
+        );
+
+        for (const layer of this.layers) {
+            const rect =
+                layer.spec.rect ??
+                [0, 0, 1, 1];
+
+            const [x, y, w, h] =
+                this.rectPixels(rect);
+
+            gl.viewport(
+                x,
+                y,
+                w,
+                h
+            );
+
+            gl.enable(
+                gl.SCISSOR_TEST
+            );
+
+            gl.scissor(
+                x,
+                y,
+                w,
+                h
+            );
+
+            this.applyBlend(
+                layer.spec.blend
+            );
+
+            gl.useProgram(
+                layer.program
+            );
+
+            const u =
+                layer.uniforms;
+
+            if (u.resolution) {
+                gl.uniform2f(
+                    u.resolution,
+                    w,
+                    h
+                );
+            }
+
+            if (u.screenResolution) {
+                gl.uniform2f(
+                    u.screenResolution,
+                    this.width,
+                    this.height
+                );
+            }
+
+            if (u.rect) {
+                gl.uniform4f(
+                    u.rect,
+                    rect[0],
+                    rect[1],
+                    rect[2],
+                    rect[3]
+                );
+            }
+
+            if (u.time) {
+                gl.uniform1f(
+                    u.time,
+                    state.time ?? 0
+                );
+            }
+
+            if (u.yaw) {
+                gl.uniform1f(
+                    u.yaw,
+                    state.yaw ?? 0
+                );
+            }
+
+            if (u.pointer) {
+                gl.uniform2f(
+                    u.pointer,
+                    ...(state.pointer ?? [0, 0])
+                );
+            }
+
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                3
+            );
+        }
+
+        gl.disable(
+            gl.SCISSOR_TEST
+        );
+    }
 }

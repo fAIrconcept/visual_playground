@@ -1,10 +1,35 @@
 {
   "vertex": "../../shaders/fullscreen.vert",
+
   "layers": [
-    {"shader":"sky.frag",       "rect":[0,0,1,1],       "blend":"replace"},
-    {"shader":"clouds.frag",    "rect":[0,0,1,0.78],    "blend":"alpha"},
-    {"shader":"city-far.frag",  "rect":[0,0.58,1,0.26], "blend":"alpha"},
-    {"shader":"city-mid.frag",  "rect":[0,0.65,1,0.27], "blend":"alpha"},
-    {"shader":"city-near.frag", "rect":[0,0.70,1,0.30], "blend":"alpha"}
+    {
+      "shader": "sky.frag",
+      "rect": [0.0, 0.0, 1.0, 1.0],
+      "blend": "replace"
+    },
+
+    {
+      "shader": "clouds.frag",
+      "rect": [0.0, 0.0, 1.0, 0.82],
+      "blend": "alpha"
+    },
+
+    {
+      "shader": "city-far.frag",
+      "rect": [0.0, 0.67, 1.0, 0.18],
+      "blend": "alpha"
+    },
+
+    {
+      "shader": "city-mid.frag",
+      "rect": [0.0, 0.72, 1.0, 0.18],
+      "blend": "alpha"
+    },
+
+    {
+      "shader": "city-near.frag",
+      "rect": [0.0, 0.77, 1.0, 0.23],
+      "blend": "alpha"
+    }
   ]
 }
