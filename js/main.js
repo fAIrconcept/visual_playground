@@ -62,6 +62,25 @@ async function start() {
   }
 }
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js');
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        './service-worker.js',
+        {
+          scope: './'
+        }
+      );
+
+      console.log(
+        'Service worker registered:',
+        registration.scope
+      );
+    } catch (err) {
+      console.error(
+        'Service worker registration failed:',
+        err
+      );
+    }
+  });
 }
 start();
