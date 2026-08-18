@@ -2,3 +2,4 @@
 *.code-workspace
 .vs-code
 .clang-format
+version.json

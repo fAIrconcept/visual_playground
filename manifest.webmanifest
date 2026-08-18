@@ -1,0 +1,10 @@
+{
+    "name": "Visual Playground",
+    "short_name": "Visual",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#080510",
+    "theme_color": "#080510",
+    "orientation": "portrait"
+}
