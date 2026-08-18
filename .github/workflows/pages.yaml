@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Update build for cache reload
 
 on:
   push:
