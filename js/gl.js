@@ -73,7 +73,7 @@ export async function loadTexture(gl, url) {
     gl.texParameteri(
         gl.TEXTURE_2D,
         gl.TEXTURE_MIN_FILTER,
-        gl.LINEAR
+        gl.LINEAR_MIPMAP_LINEAR
     );
 
     gl.texParameteri(
@@ -107,6 +107,24 @@ export async function loadTexture(gl, url) {
         gl.UNSIGNED_BYTE,
         image
     );
+
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    const anisotropy =
+        gl.getExtension("EXT_texture_filter_anisotropic") ||
+        gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+
+    if (anisotropy) {
+        const maximum = gl.getParameter(
+            anisotropy.MAX_TEXTURE_MAX_ANISOTROPY_EXT
+        );
+
+        gl.texParameterf(
+            gl.TEXTURE_2D,
+            anisotropy.TEXTURE_MAX_ANISOTROPY_EXT,
+            Math.min(8, maximum)
+        );
+    }
 
     gl.bindTexture(
         gl.TEXTURE_2D,

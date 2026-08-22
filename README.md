@@ -1,5 +1,7 @@
 # GLSL Layer Compositor
 
+https://fairconcept.github.io/visual_playground/
+
 Tiny WebGL2 layer compositor for GitHub Pages / Android.
 
 Design:
@@ -32,8 +34,12 @@ uniform vec2 u_screenResolution;
 uniform vec4 u_rect;
 uniform float u_time;
 uniform float u_yaw;
+uniform float u_cloudContrast;
 uniform vec2 u_pointer;
 uniform sampler2D u_input;
 ```
+
+Set `cloudContrast` on a scene layer to control `u_cloudContrast`; it defaults
+to `1.7` when the shader declares the uniform.
 
 Run locally with any HTTP server, e.g. `python3 -m http.server 8080`, or publish repository root with GitHub Pages.

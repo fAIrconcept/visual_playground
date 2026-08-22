@@ -85,6 +85,14 @@ export class LayerCompositor {
           opacity: this.gl.getUniformLocation(program, "u_opacity"),
 
           color: this.gl.getUniformLocation(program, "u_color"),
+
+          cloudContrast: this.gl.getUniformLocation(
+            program,
+            "u_cloudContrast",
+          ),
+
+          viewPitch: this.gl.getUniformLocation(program, "u_viewPitch"),
+
         },
       });
     }
@@ -99,6 +107,22 @@ export class LayerCompositor {
   resize(width, height) {
     this.width = width;
     this.height = height;
+  }
+
+  setCloudContrast(value) {
+    for (const layer of this.layers) {
+      if (layer.uniforms.cloudContrast) {
+        layer.spec.cloudContrast = value;
+      }
+    }
+  }
+
+  setViewPitch(value) {
+    for (const layer of this.layers) {
+      if (layer.uniforms.viewPitch) {
+        layer.spec.viewPitch = value;
+      }
+    }
   }
 
   rectPixels(rect) {
@@ -186,6 +210,17 @@ export class LayerCompositor {
 
       if (u.yaw) {
         gl.uniform1f(u.yaw, state.yaw ?? 0);
+      }
+
+      if (u.cloudContrast) {
+        gl.uniform1f(
+          u.cloudContrast,
+          layer.spec.cloudContrast ?? 1.7,
+        );
+      }
+
+      if (u.viewPitch) {
+        gl.uniform1f(u.viewPitch, layer.spec.viewPitch ?? 0.0);
       }
 
       if (u.pointer) {

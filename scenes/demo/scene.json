@@ -9,8 +9,10 @@
         },
         {
             "shader": "clouds.frag",
+            "texture": "cloud-noise.png",
             "rect": [0.0, 0.0, 1.0, 1.0],
-            "blend": "alpha"
+            "blend": "alpha",
+            "cloudContrast": 2.6
         },
         {
             "shader": "city.frag",

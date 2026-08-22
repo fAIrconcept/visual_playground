@@ -3,6 +3,38 @@ import { Input } from "./input.js";
 
 const canvas = document.querySelector("#gl");
 const fpsEl = document.querySelector("#fps");
+const cloudControls = document.querySelector("#cloud-controls");
+const cloudContrastInput = document.querySelector("#cloud-contrast");
+const cloudContrastValue = document.querySelector("#cloud-contrast-value");
+const viewPitchInput = document.querySelector("#view-pitch");
+const viewPitchValue = document.querySelector("#view-pitch-value");
+
+function toggleControls() {
+  cloudControls.classList.toggle("is-hidden");
+}
+
+canvas.addEventListener("dblclick", toggleControls);
+
+let lastTouch = null;
+
+canvas.addEventListener("pointerup", (event) => {
+  if (event.pointerType !== "touch") {
+    return;
+  }
+
+  const touch = { time: performance.now(), x: event.clientX, y: event.clientY };
+
+  if (
+    lastTouch &&
+    touch.time - lastTouch.time < 350 &&
+    Math.hypot(touch.x - lastTouch.x, touch.y - lastTouch.y) < 40
+  ) {
+    toggleControls();
+    lastTouch = null;
+  } else {
+    lastTouch = touch;
+  }
+});
 
 async function start() {
   try {
@@ -10,6 +42,26 @@ async function start() {
     const app = new LayerCompositor(canvas);
 
     await app.loadScene("./scenes/demo/scene.json");
+
+    function updateCloudContrast() {
+      const value = Number(cloudContrastInput.value);
+
+      cloudContrastValue.value = value.toFixed(1);
+      app.setCloudContrast(value);
+    }
+
+    cloudContrastInput.addEventListener("input", updateCloudContrast);
+    updateCloudContrast();
+
+    function updateViewPitch() {
+      const value = Number(viewPitchInput.value);
+
+      viewPitchValue.value = `${value}°`;
+      app.setViewPitch(value);
+    }
+
+    viewPitchInput.addEventListener("input", updateViewPitch);
+    updateViewPitch();
 
     let last = performance.now();
     let yaw = 0;

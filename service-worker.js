@@ -44,6 +44,8 @@ const APP_FILES = [
     './scenes/demo/scene.json',
     './scenes/demo/sky.frag',
     './scenes/demo/clouds.frag',
+    './scenes/demo/clouds-panoramic.frag',
+    './scenes/demo/cloud-noise.png',
     './scenes/demo/city.frag',
 
     './scenes/demo/skyline-far.png',
